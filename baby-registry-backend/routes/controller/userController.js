@@ -2,6 +2,7 @@ const User = require("../model/User");
 const bcrypt = require('bcryptjs')
 const uuid = require('uuid')
 const dbErrorHelper = require('../lib/dbErrorHelper')
+const jwt = require('jsonwebtoken')
 
 const uuidv4 = uuid.v4
 
@@ -44,20 +45,28 @@ module.exports = {
 
     login: async (req, res) => {
         try {
-            console.log("1")
+
             let foundUser = await User.findOne({ email: req.body.email })
-            console.log(foundUser)
+
             if (!foundUser) {
                 throw Error('user not found, please sign up!')
             }
-            console.log("2")
+
             let comparedPassword = await bcrypt.compare(req.body.password, foundUser.password);
 
-            console.log("3")
+
             if (!comparedPassword) {
                 throw Error('check email and/or password')
             }
 
+            let jwtToken = jwt.sign({
+                email: foundUser.email,
+            }, process.env.JWT_USER_SECRET_KEY
+            )
+            console.log(jwtToken)
+
+
+            
             res.json({
                 message: `Welcome back ${foundUser.email}`, payload: foundUser,
             })
