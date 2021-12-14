@@ -6,8 +6,8 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var mongoose = require('mongoose')
 var cors = require('cors')
-var app = express();
-
+var app = express(); 
+const jwt = require('jsonwebtoken');
 
 var usersRouter = require('./routes/UserRouter');
 
@@ -47,5 +47,20 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+app.use((req, res, next) => {
+  const jwtToken = req.cookies.jwt_cookie;
+
+  if (jwtToken) {
+    try {
+      const { email, iat } = jwt.verify(jwtToken, process.env.JWT_USER_SECRET_KEY);
+      console.log(iat);
+      req.email = email;
+    } catch (error) {
+      console.log('error: ', error);
+    }
+  }
+  next();
+})
 
 module.exports = app;

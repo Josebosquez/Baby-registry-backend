@@ -45,8 +45,7 @@ module.exports = {
 
     login: async (req, res) => {
         try {
-
-            let foundUser = await User.findOne({ email: req.body.email })
+            let foundUser = await User.findOne({ email: req.body.email }).select("-id -lName -sLName")
 
             if (!foundUser) {
                 throw Error('user not found, please sign up!')
@@ -54,24 +53,40 @@ module.exports = {
 
             let comparedPassword = await bcrypt.compare(req.body.password, foundUser.password);
 
-
             if (!comparedPassword) {
                 throw Error('check email and/or password')
             }
 
-            let jwtToken = jwt.sign({
-                email: foundUser.email,
-            }, process.env.JWT_USER_SECRET_KEY
+            let jwtToken = jwt.sign(
+                {
+                email: foundUser.email, 
+                iat: Date.now(),
+                }, 
+                process.env.JWT_USER_SECRET_KEY
             )
-            console.log(jwtToken)
 
+            console.log('jwt_cookie: ', jwtToken)
 
-            
+            res.cookie('jwt_cookie', jwtToken, {
+                httpOnly: true,
+                secure: false,
+            })     
+
             res.json({
-                message: `Welcome back ${foundUser.email}`, payload: foundUser,
+                payload: foundUser,
             })
         } catch (e) {
             res.status(500).json({ message: dbErrorHelper(e) });
         }
-    }
+    },
+
+    logOut: async (req, res) => {
+        try {
+            res.clearCookie('jwt_cookie').send('Logged out successfully')
+            res.clearCookie('jwt_cookie').send('Logged out successfully')
+        } catch (e) {
+            res.status(500).json({ message: dbErrorHelper(e) });
+        }    
+    },
+
 }
