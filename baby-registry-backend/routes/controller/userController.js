@@ -83,7 +83,6 @@ module.exports = {
     logOut: async (req, res) => {
         try {
             res.clearCookie('jwt_cookie').send('Logged out successfully')
-            res.clearCookie('jwt_cookie').send('Logged out successfully')
         } catch (e) {
             res.status(500).json({ message: dbErrorHelper(e) });
         }    
